@@ -10,7 +10,7 @@ import (
 
 func main() {
 	dr := &DataReceiver{
-		conns: []*websocket.Conn{},
+		conns: make(map[string]*websocket.Conn),
 	}
 
 	http.HandleFunc("/ws", dr.handleWS)
@@ -19,7 +19,7 @@ func main() {
 }
 
 type DataReceiver struct {
-	conns []*websocket.Conn
+	conns map[string]*websocket.Conn
 }
 
 func (dr *DataReceiver) handleWS(w http.ResponseWriter, r *http.Request) {
@@ -36,8 +36,8 @@ func (dr *DataReceiver) handleWS(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	dr.conns[conn.RemoteAddr().String()] = conn
 	go dr.onConnect(conn)
-	dr.conns = append(dr.conns, conn)
 	go dr.receiveLoop(conn)
 }
 
@@ -45,7 +45,9 @@ func (dr *DataReceiver) receiveLoop(conn *websocket.Conn) {
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Fatal(err)
+			conn.Close()
+			delete(dr.conns, conn.RemoteAddr().String())
+			break
 		}
 
 		for _, c := range dr.conns {
