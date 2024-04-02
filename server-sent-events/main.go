@@ -26,8 +26,12 @@ func send(c echo.Context, count int) error {
 		return nil
 	}
 
-	c.Response().Write([]byte(
-		fmt.Sprintf("data: hello from server (%d)\n\n", count)))
+	fmt.Fprintf(
+		c.Response().Writer,
+		"data: hello from server (%d)\n\n",
+		count)
+	c.Response().Flush()
 	time.Sleep(time.Second) // simulate long operation
+
 	return send(c, count-1)
 }
