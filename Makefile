@@ -13,5 +13,9 @@ long-poll:
 sse:
 	@go build -o ./bin/sse ./server-sent-events
 	@./bin/sse
-	
-.PHONY: push short-poll long-poll
+
+ws:
+	@go build -o ./bin/ws ./ws
+	@./bin/ws
+
+.PHONY: push short-poll long-poll ws
